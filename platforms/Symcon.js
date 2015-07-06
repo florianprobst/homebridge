@@ -59,6 +59,9 @@ SymconPlatform.prototype = {
 									},
 									function (parallelCallback) {
 										that.callRpcMethod("IPS_GetConfiguration", [instanceId], parallelCallback);
+									},
+									function (parallelCallback) {
+										that.callRpcMethod("IPS_GetObject", [instanceId], parallelCallback);
 									}
 								],
 								function (err, results) {
@@ -72,8 +75,10 @@ SymconPlatform.prototype = {
 										instanceConfig = results[2].result;
 									else
 										instanceConfig = JSON.parse(results[2].result);
+										
+									var instanceObject = results[3].result;
 									
-									var instance = that.createSpecificAccessory(that.log, that.options.rpcClientOptions, instanceId, name, instance, instanceConfig);
+									var instance = that.createSpecificAccessory(that.log, that.options.rpcClientOptions, instanceId, name, instance, instanceConfig, instanceObject);
 									
 									if (instance !== undefined) {
 										foundAccessories.push(instance);
@@ -97,7 +102,7 @@ SymconPlatform.prototype = {
 		);
 	},
 
-	createSpecificAccessory : function(log, rpcClientOptions, instanceId, name, instance, instanceConfig) {
+	createSpecificAccessory : function(log, rpcClientOptions, instanceId, name, instance, instanceConfig, instanceObject) {
 		switch (instance.ModuleInfo.ModuleID) {
 			case '{2D871359-14D8-493F-9B01-26432E3A710F}': // LCN Unit
 				switch (instanceConfig.Unit) {
@@ -127,8 +132,45 @@ SymconPlatform.prototype = {
 				}
 				break;
 			case '{EE4A81C6-5C90-4DB7-AD2F-F6BBD521412E}': // HomeMatic Device
-				// todo: return correct type (switch, light bulb, ...) depending on configuration
-				return new symconAccessories.Switch.HomeMaticSwitchAccessory(log, rpcClientOptions, instanceId, name, instance, instanceConfig);
+				//suche nach Device-Type="HM-LC-Sw2-FM" in der Beschreibung des Gerätes in IPS
+				var search_string = 'Device-Type="';
+				var pos = instanceObject.ObjectInfo.indexOf(search_string);
+				var hm_type = "unknown";
+				if(pos > -1) {
+					hm_type = instanceObject.ObjectInfo.substring(pos + search_string.length);
+					hm_type = hm_type.substring(0, hm_type.length - 1);
+					log("HomeMatic device of type: " +  hm_type + " found.");
+				}
+				switch(hm_type){
+					case 'HM-LC-Sw2-FM': //Unterputz 2-fach Aktor
+					case 'HM-LC-Sw1-FM': //Unterputz 1-fach Aktor
+					case 'HM-LC-Sw1-Pl': //Steckdose
+					case 'HM-ES-PMSw1-Pl': //Steckdose mit Strommessung
+						return new symconAccessories.Switch.HomeMaticSwitchAccessory(log, rpcClientOptions, instanceId, name, instance, instanceConfig);
+						break;
+					/*case 'HM-WDS40-TH-I':	//Temperatursensor Indoor
+					case 'HM-WDS10-TH-O': //Temperatursensor Outdoor
+						return new symconAccessories.Temperature.HomeMaticTemperatureAccessory(log, rpcClientOptions, instanceId, name, instance, instanceConfig);
+						break;*/
+					case 'HM-WDS40-TH-I':	//Temperatursensor Indoor -> bis neuer Temperatursensortyp fertig, läuft dieser als Wandthermostat
+					case 'HM-WDS10-TH-O': //Temperatursensor Outdoor -> bis neuer Temperatursensortyp fertig, läuft dieser als Wandthermostat
+					case 'HM-TC-IT-WM-W-EU': //Wandthermostat neue Version
+						return new symconAccessories.Thermostat.SymconHomeMaticThermostat_HM_TC_IT_WM_W_EU_Accessory(log, rpcClientOptions, instanceId, name, instance, instanceConfig);
+						break;
+					case 'HM-CC-TC': //Wandthermostat alte Version 
+						// Bei diesen Geräten besteht der Thermostat aus zwei Geräten,
+						// Unter Kanal 1 ist HUMIDITY UND TEMPERATURE zu finden.
+						// Am besten definierst du in der "Beschreibung/Info" des Geräts in IPS
+						// dieses Gerät dann als Temperatursensor (Device-Type="HM-WDS-40-TH-I")
+						log("Homematic HM-CC-TC thermostats are not supported yet");
+						break;
+					case 'HM-Sec-Key-S': //Keymatic
+						log("Keymatic not supported yet");
+						break;
+					case 'unknown':
+						//log("Unknown HomeMatic Device");
+						break;
+				}
 			default:
 				break;
 		}

@@ -9,19 +9,25 @@ SymconGenericThermostatAccessory.prototype = Object.create(symconGeneric.prototy
 
 	getTargetTemperature: {
 		value: function(callback) {
-			this.writeLogEntry('Error: generic method called! Overwrite for specific module!');
+			this.writeLogEntry('Error: generic method getTargetTemperature called! Overwrite for specific module!');
 		}
 	},
 
 	setTargetTemperature: {
 		value: function(value) {
-			this.writeLogEntry('Error: generic method called! Overwrite for specific module!');
+			this.writeLogEntry('Error: generic method SetTargetTemperature called! Overwrite for specific module!');
 		}
 	},
 
 	getCurrentTemperature: {
 		value: function(callback) {
-			this.writeLogEntry('Error: generic method called! Overwrite for specific module!');
+			this.writeLogEntry('Error: generic method GetCurrentTemperature called! Overwrite for specific module!');
+		}
+	},
+	
+	getCurrentHumidity: {
+		value: function(callback) {
+			this.writeLogEntry('Error: generic method getCurrentHumidity called! Overwrite for specific module!');
 		}
 	},
 
@@ -35,6 +41,7 @@ SymconGenericThermostatAccessory.prototype = Object.create(symconGeneric.prototy
 			this.writeLogEntry('adding control characteristic TARGET_TEMPERATURE_CTYPE...');
 			this.writeLogEntry('adding control characteristic CURRENT_TEMPERATURE_CTYPE...');
 			this.writeLogEntry('adding control characteristic TEMPERATURE_UNITS_CTYPE...');
+			this.writeLogEntry('adding control characteristic CURRENT_HUMIDITY_CTYPE...');
 			
 			cTypes.push(
 				{
@@ -109,6 +116,20 @@ SymconGenericThermostatAccessory.prototype = Object.create(symconGeneric.prototy
 					supportEvents: false,
 					supportBonjour: false,
 					manfDescription: "Unit",
+				},
+				{
+					cType: types.CURRENT_RELATIVE_HUMIDITY_CTYPE,
+					onUpdate: function(value) { that.writeLogEntry("update current relative humidity to: " + value); },
+					onRead : function(callback) {
+						that.getCurrentHumidity(callback);
+					},
+					perms: ["pr","ev"],
+					format: "float",
+					initialValue: 0, // 0: celsius
+					supportEvents: false,
+					supportBonjour: false,
+					manfDescription: "Current Humidity",
+					unit: "percent"
 				}
 			);
 			
