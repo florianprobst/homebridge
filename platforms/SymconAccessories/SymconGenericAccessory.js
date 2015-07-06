@@ -6,7 +6,7 @@ function SymconGenericAccessory(log, rpcClientOptions, instanceId, name, instanc
 	this.rpcClientOptions = rpcClientOptions;
 	this.instanceId = instanceId;
 	this.name = instanceId.toString();
-	this.displayName = name + " [" + instanceId + "]";
+	this.displayName = name + " " + instanceId + "";
 	this.instance = instance;
 	this.instanceConfig = instanceConfig;
 }
