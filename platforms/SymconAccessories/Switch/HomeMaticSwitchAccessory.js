@@ -11,7 +11,23 @@ HomeMaticSwitchAccessory.prototype = Object.create(symconGenericSwitch.prototype
 	getPowerState : {
 		value: function(callback) {
 			var that = this;
-			this.writeLogEntry('Error: not implemented!');
+			async.waterfall(
+			[
+			function (waterfallCallback){
+				//hole instance id
+				that.callRpcMethod('IPS_GetObjectIDByIdent', ['STATE', that.instanceId], waterfallCallback);
+			},
+			function (res, waterfallCallback){
+				//rufe Wert der zuvor geholten instanz id ab
+				that.callRpcMethod('GetValueBoolean', [res.result], waterfallCallback);
+			}
+			],
+			function(err, res){
+				//Rückgabe des Werts an Homekit
+				that.writeLogEntry("SwitchStatus: " + res.result);
+				callback(res.result);
+			}
+			);
 		}
 	},
 
