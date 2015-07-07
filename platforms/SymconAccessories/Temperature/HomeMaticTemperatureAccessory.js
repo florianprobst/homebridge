@@ -7,7 +7,54 @@ function HomeMaticTemperatureAccessory(log, rpcClientOptions, instanceId, name, 
 };
 
 HomeMaticTemperatureAccessory.prototype = Object.create(symconGenericTemperature.prototype, {
-
+	//HomeKit does not support temperature/humidity only-sensors yet. So we use a thermostat object
+	//unsupported thermostat methods will return current temperature and humidity.
+	getTargetTemperature : {
+		value: function(callback) {
+			var that = this;
+			async.waterfall(
+			[
+			function (waterfallCallback){
+				//hole instance id
+				that.callRpcMethod('IPS_GetObjectIDByIdent', ['TEMPERATURE', that.instanceId], waterfallCallback);
+			},
+			function (res, waterfallCallback){
+				//rufe Wert der zuvor geholten instanz id ab
+				that.callRpcMethod('GetValueFloat', [res.result], waterfallCallback);
+			}
+			],
+			function(err, res){
+				//Rueckgabe des Werts an Homekit
+				that.writeLogEntry("GetValueFloat: " + res.result);
+				callback(res.result);
+			}
+			);
+		}
+	},
+	
+	setTargetTemperature : {
+		value: function(callback) {
+			var that = this;
+			async.waterfall(
+			[
+			function (waterfallCallback){
+				//hole instance id
+				that.callRpcMethod('IPS_GetObjectIDByIdent', ['TEMPERATURE', that.instanceId], waterfallCallback);
+			},
+			function (res, waterfallCallback){
+				//rufe Wert der zuvor geholten instanz id ab
+				that.callRpcMethod('GetValueFloat', [res.result], waterfallCallback);
+			}
+			],
+			function(err, res){
+				//Rueckgabe des Werts an Homekit
+				that.writeLogEntry("GetValueFloat: " + res.result);
+				callback(res.result);
+			}
+			);
+		}
+	},
+	
 	getTemperature : {
 		value: function(callback) {
 			var that = this;
@@ -23,13 +70,13 @@ HomeMaticTemperatureAccessory.prototype = Object.create(symconGenericTemperature
 			}
 			],
 			function(err, res){
-				//Rückgabe des Werts an Homekit
+				//Rueckgabe des Werts an Homekit
 				that.writeLogEntry("GetValueFloat: " + res.result);
 				callback(res.result);
 			}
 			);
 		}
-	}/*,
+	},
 	
 	getHumidity : {
 		value: function(callback) {
@@ -46,13 +93,13 @@ HomeMaticTemperatureAccessory.prototype = Object.create(symconGenericTemperature
 			}
 			],
 			function(err, res){
-				//Rückgabe des Werts an Homekit
+				//Rueckgabe des Werts an Homekit
 				that.writeLogEntry("GetValueInteger: " + res.result);
 				callback(res.result);
 			}
 			);
 		}
-	}*/
+	}
 });
 
 HomeMaticTemperatureAccessory.prototype.constructor = HomeMaticTemperatureAccessory;

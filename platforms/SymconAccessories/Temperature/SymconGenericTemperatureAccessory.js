@@ -9,25 +9,25 @@ SymconGenericTemperatureAccessory.prototype = Object.create(symconGeneric.protot
 
 	getTargetTemperature: {
 		value: function(callback) {
-			this.writeLogEntry('Error: generic method called! Overwrite for specific module!');
+			this.writeLogEntry('Error: generic method getTargetTemperature called! Overwrite for specific module!');
 		}
 	},
 
 	setTargetTemperature: {
 		value: function(value) {
-			this.writeLogEntry('Error: generic method called! Overwrite for specific module!');
+			this.writeLogEntry('Error: generic method SetTargetTemperature called! Overwrite for specific module!');
 		}
 	},
 
 	getCurrentTemperature: {
 		value: function(callback) {
-			this.writeLogEntry('Error: generic method called! Overwrite for specific module!');
+			this.writeLogEntry('Error: generic method GetCurrentTemperature called! Overwrite for specific module!');
 		}
 	},
 	
 	getCurrentHumidity: {
 		value: function(callback) {
-			this.writeLogEntry('Error: generic method called! Overwrite for specific module!');
+			this.writeLogEntry('Error: generic method getCurrentHumidity called! Overwrite for specific module!');
 		}
 	},
 
@@ -36,11 +36,62 @@ SymconGenericTemperatureAccessory.prototype = Object.create(symconGeneric.protot
 			var that = this;
 			var cTypes = symconGeneric.prototype.getControlCharacteristics.call(this);
 			
+			this.writeLogEntry('adding control characteristic CURRENTHEATINGCOOLING_CTYPE...');
+			this.writeLogEntry('adding control characteristic TARGETHEATINGCOOLING_CTYPE...');
+			this.writeLogEntry('adding control characteristic TARGET_TEMPERATURE_CTYPE...');
 			this.writeLogEntry('adding control characteristic CURRENT_TEMPERATURE_CTYPE...');
 			this.writeLogEntry('adding control characteristic TEMPERATURE_UNITS_CTYPE...');
 			this.writeLogEntry('adding control characteristic CURRENT_HUMIDITY_CTYPE...');
 			
 			cTypes.push(
+				{
+					cType : types.CURRENTHEATINGCOOLING_CTYPE,
+					onUpdate : function(value) { that.writeLogEntry("update current heating/cooling type to: " + value); },
+					onRead : function(callback) { that.writeLogEntry("onRead called for CURRENTHEATINGCOOLING_CTYPE"); },
+					perms : ["pr","ev"],
+					format : "int",
+					initialValue : 1, // Unit is set to heating.
+					supportEvents : false,
+					supportBonjour : false,
+					manfDescription : "Current Mode",
+					designedMaxLength : 1,
+					designedMinValue : 0,
+					designedMaxValue : 2,
+					designedMinStep : 1,    
+				},
+				{
+					cType : types.TARGETHEATINGCOOLING_CTYPE,
+					onUpdate : function(value) { that.writeLogEntry("update target heating/cooling type to: " + value); },
+					onRead : function(callback) { that.writeLogEntry("onRead called for TARGETHEATINGCOOLING_CTYPE"); },
+					perms : ["pw","pr","ev"],
+					format : "int",
+					initialValue : 1, // Unit is set to heating.
+					supportEvents : false,
+					supportBonjour : false,
+					manfDescription : "Target Mode",
+					designedMinValue : 0,
+					designedMaxValue : 3,
+					designedMinStep : 1,
+				},
+				{
+					cType : types.TARGET_TEMPERATURE_CTYPE,
+					onUpdate : function(value) {
+						that.setTargetTemperature(value);
+					},
+					onRead : function(callback) {
+						that.getTargetTemperature(callback);
+					},
+					perms : ["pw","pr","ev"],
+					format : "int",
+					initialValue : 0,
+					supportEvents : false,
+					supportBonjour : false,
+					manfDescription : "Target Temperature",
+					designedMinValue : 0,
+					designedMaxValue : 38,
+					designedMinStep : 1,
+					unit : "celsius"
+				},
 				{
 					cType: types.CURRENT_TEMPERATURE_CTYPE,
 					onUpdate: function(value) { that.writeLogEntry("update current temperature to: " + value); },
@@ -48,7 +99,7 @@ SymconGenericTemperatureAccessory.prototype = Object.create(symconGeneric.protot
 						that.getCurrentTemperature(callback);
 					},
 					perms: ["pr","ev"],
-					format: "float",
+					format: "int",
 					initialValue: 0,
 					supportEvents: false,
 					supportBonjour: false,
@@ -70,10 +121,10 @@ SymconGenericTemperatureAccessory.prototype = Object.create(symconGeneric.protot
 					cType: types.CURRENT_RELATIVE_HUMIDITY_CTYPE,
 					onUpdate: function(value) { that.writeLogEntry("update current relative humidity to: " + value); },
 					onRead : function(callback) {
-						that.getCurrentTemperature(callback);
+						that.getCurrentHumidity(callback);
 					},
 					perms: ["pr","ev"],
-					format: "int",
+					format: "float",
 					initialValue: 0, // 0: celsius
 					supportEvents: false,
 					supportBonjour: false,
@@ -92,7 +143,7 @@ SymconGenericTemperatureAccessory.prototype = Object.create(symconGeneric.protot
 					sType : types.ACCESSORY_INFORMATION_STYPE,
 					characteristics : this.getInformationCharacteristics(),
 				}, {
-					sType : types.THERMOSTAT_STYPE,	//es gibt keinen temperature stype...
+					sType : types.THERMOSTAT_STYPE,
 					characteristics : this.getControlCharacteristics()
 				}
 			];
