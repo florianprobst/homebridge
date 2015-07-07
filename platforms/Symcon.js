@@ -152,12 +152,10 @@ SymconPlatform.prototype = {
 					case 'HM-ES-PMSw1-Pl': //Steckdose mit Strommessung
 						return new symconAccessories.Switch.HomeMaticSwitchAccessory(log, rpcClientOptions, instanceId, name, instance, instanceConfig);
 						break;
-					/*case 'HM-WDS40-TH-I':	//Temperatursensor Indoor
+					case 'HM-WDS40-TH-I':	//Temperatursensor Indoor
 					case 'HM-WDS10-TH-O': //Temperatursensor Outdoor
 						return new symconAccessories.Temperature.HomeMaticTemperatureAccessory(log, rpcClientOptions, instanceId, name, instance, instanceConfig);
-						break;*/
-					case 'HM-WDS40-TH-I':	//Temperatursensor Indoor -> bis neuer Temperatursensortyp fertig, läuft dieser als Wandthermostat
-					case 'HM-WDS10-TH-O': //Temperatursensor Outdoor -> bis neuer Temperatursensortyp fertig, läuft dieser als Wandthermostat
+						break;
 					case 'HM-TC-IT-WM-W-EU': //Wandthermostat neue Version
 						return new symconAccessories.Thermostat.SymconHomeMaticThermostat_HM_TC_IT_WM_W_EU_Accessory(log, rpcClientOptions, instanceId, name, instance, instanceConfig);
 						break;
